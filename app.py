@@ -1,9 +1,9 @@
-from flask_cors import CORS
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Autorise les appels depuis GitHub Pages
 
 @app.route("/send-email", methods=["POST"])
 def send_email():
@@ -28,7 +28,6 @@ def send_email():
 
     headers = {"Content-Type": "application/json"}
     res = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
-
 
     if res.status_code == 200:
         return jsonify({"success": True})
