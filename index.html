@@ -1,49 +1,31 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Test EmailJS 3D</title>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 500px; margin: auto; }
-    button { padding: 1rem; background: black; color: white; border: none; cursor: pointer; width: 100%; }
-    #etat { margin-top: 1rem; font-weight: bold; }
-  </style>
-</head>
-<body>
+<script>
+  document.getElementById('tester').addEventListener('click', function () {
+    const payload = {
+      email: "test@iko3d.fr",
+      message: "Ceci est un test de fonctionnement EmailJS via Render",
+      fichier3d: "TEST_base64_simulé",
+      filename: "test.stl"
+    };
 
-  <h1>🔧 Test envoi EmailJS via Render</h1>
+    fetch("https://formulaire-3d-backend.onrender.com/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(async res => {
+      const contentType = res.headers.get("Content-Type");
+      const isJson = contentType && contentType.includes("application/json");
+      const data = isJson ? await res.json() : { success: false, error: "Réponse non JSON" };
 
-  <p>Ce test envoie un email de test sans formulaire ni fichier.</p>
+      document.getElementById('etat').textContent = data.success
+        ? "✅ Email envoyé avec succès"
+        : "❌ Erreur EmailJS : " + (data.error || "inconnue");
 
-  <button id="tester">Envoyer un test</button>
-
-  <p id="etat"></p>
-
-  <script>
-    document.getElementById('tester').addEventListener('click', function () {
-      const payload = {
-        email: "test@iko3d.fr",
-        message: "Ceci est un test de fonctionnement EmailJS via Render",
-        fichier3d: "TEST_base64_simulé",
-        filename: "test.stl"
-      };
-
-      fetch("https://formulaire-3d-backend.onrender.com/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('etat').textContent = data.success
-          ? "✅ Email envoyé avec succès"
-          : "❌ Erreur EmailJS : " + (data.error || "inconnue");
-      })
-      .catch(err => {
-        document.getElementById('etat').textContent = "❌ Erreur JS : " + err.message;
-      });
+      console.log("Réponse EmailJS :", data);
+    })
+    .catch(err => {
+      document.getElementById('etat').textContent = "❌ Erreur JS : " + err.message;
+      console.error("Erreur JS :", err);
     });
-  </script>
-
-</body>
-</html>
+  });
+</script>
