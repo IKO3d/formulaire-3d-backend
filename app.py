@@ -20,8 +20,8 @@ def send_email():
         "template_params": {
             "email": data.get("email"),
             "message": data.get("message"),
-            "fichier3d": data.get("fichier3d"),
-            "filename": data.get("filename")
+            "filename": data.get("filename"),
+            "fichier3d": data.get("fichier3d")
         }
     }
 
