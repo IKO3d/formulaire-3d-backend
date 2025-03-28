@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Demande de devis 3D</title>
+  <meta name="description" content="Formulaire de demande de devis 3D avec envoi de fichier STL par email.">
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; }
+    label { display: block; margin-top: 1rem; }
+    input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+    button { background: black; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h1>Demande de devis impression 3D</h1>
+
+  <form id="formulaire">
+    <label for="email">Votre email :</label>
+    <input type="email" id="email" required />
+
+    <label for="message">Votre demande :</label>
+    <textarea id="message" rows="4" required></textarea>
+
+    <label for="fichier">Fichier STL :</label>
+    <input type="file" id="fichier" accept=".stl" required />
+
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <p id="etat" style="margin-top: 1rem;"></p>
+
+  <script>
+    document.getElementById('formulaire').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const message = document.getElementById('message').value;
+      const fichier = document.getElementById('fichier').files[0];
+
+      if (!fichier) return alert("Merci de sélectionner un fichier STL.");
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const base64 = event.target.result.split(',')[1];
+        const payload = {
+          email: email,
+          message: message,
+          fichier3d: base64,
+          filename: fichier.name
+        };
+
+        fetch("https://formulaire-3d-backend.onrender.com/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('etat').textContent = data.success
+            ? "✅ Devis envoyé avec succès !"
+            : "❌ Erreur lors de l'envoi.";
+        })
+        .catch(() => {
+          document.getElementById('etat').textContent = "❌ Une erreur est survenue.";
+        });
+      };
+
+      reader.readAsDataURL(fichier);
+    });
+  </script>
+
+</body>
+</html>
