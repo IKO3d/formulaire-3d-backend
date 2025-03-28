@@ -1,48 +1,39 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
+EMAILJS_SERVICE_ID = "service_cub2bpl"
+EMAILJS_TEMPLATE_ID = "template_4exwh14"
+EMAILJS_PUBLIC_KEY = "27iodv7KMIYgP-rUM"
 
-@app.route("/send-email", methods=["POST", "OPTIONS"])
+@app.route("/send-email", methods=["POST"])
 def send_email():
-    if request.method == "OPTIONS":
-        return '', 204  # Répond au preflight
-
     data = request.json
 
     payload = {
-        "service_id": "service_cub2bpl",
-        "template_id": "template_4exwh14",
-        "user_id": "27iodv7KMIYgP-rUM",
+        "service_id": EMAILJS_SERVICE_ID,
+        "template_id": EMAILJS_TEMPLATE_ID,
+        "user_id": EMAILJS_PUBLIC_KEY,
         "template_params": {
             "email": data.get("email"),
             "message": data.get("message"),
-            "filename": data.get("filename"),
-            "fichier3d": data.get("fichier3d")
+            "fichier3d": data.get("fichier3d"),
+            "filename": data.get("filename")
         }
     }
 
-    headers = {"Content-Type": "application/json"}
-    # Correct (v1.0 → supporté)
-r = requests.post("https://api.emailjs.com/api/v1.0/email/send", json=payload, headers=headers)
+    headers = { "Content-Type": "application/json" }
 
-
+    r = requests.post("https://api.emailjs.com/api/v1.0/email/send", json=payload, headers=headers)
 
     if r.status_code == 200:
         return jsonify({"success": True})
     else:
         return jsonify({"success": False, "error": r.text}), 400
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def index():
-    return "Backend OK"
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    return "OK"
