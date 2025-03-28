@@ -2,46 +2,83 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Test EmailJS 3D</title>
+  <title>Demande de devis 3D</title>
+  <meta name="description" content="Formulaire de devis impression 3D avec envoi de fichier STL">
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 500px; margin: auto; }
-    button { padding: 1rem; background: black; color: white; border: none; cursor: pointer; width: 100%; }
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; }
+    label { display: block; margin-top: 1rem; }
+    input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+    button { background: black; color: white; border: none; cursor: pointer; }
     #etat { margin-top: 1rem; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <h1>🔧 Test envoi EmailJS via Render</h1>
-  <p>Ce test envoie un email de test sans formulaire ni fichier.</p>
-  <button id="tester">Envoyer un test</button>
+  <h1>Demande de devis impression 3D</h1>
+
+  <form id="formulaire">
+    <label for="email">Votre email :</label>
+    <input type="email" id="email" required />
+
+    <label for="message">Votre demande :</label>
+    <textarea id="message" rows="4" required></textarea>
+
+    <label for="fichier">Fichier STL :</label>
+    <input type="file" id="fichier" accept=".stl" required />
+
+    <button type="submit">Envoyer</button>
+  </form>
+
   <p id="etat"></p>
 
   <script>
-    // Attendre que la page soit entièrement chargée
-    window.addEventListener('DOMContentLoaded', function () {
-      const bouton = document.getElementById('tester');
-      bouton.addEventListener('click', function () {
-        const payload = {
-          email: "test@iko3d.fr",
-          message: "Ceci est un test de fonctionnement EmailJS via Render",
-          fichier3d: "TEST_base64_simulé",
-          filename: "test.stl"
+    document.addEventListener('DOMContentLoaded', function () {
+      const formulaire = document.getElementById('formulaire');
+      const etat = document.getElementById('etat');
+
+      formulaire.addEventListener('submit', function (e) {
+        e.preventDefault();
+        etat.textContent = "⏳ Envoi en cours...";
+
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+        const fichier = document.getElementById('fichier').files[0];
+
+        if (!fichier) {
+          etat.textContent = "❌ Merci de sélectionner un fichier STL.";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const base64 = event.target.result.split(',')[1];
+
+          const payload = {
+            email: email,
+            message: message,
+            fichier3d: base64,
+            filename: fichier.name
+          };
+
+          fetch("https://formulaire-3d-backend.onrender.com/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              etat.textContent = "✅ Email envoyé avec succès !";
+            } else {
+              etat.textContent = "❌ Erreur lors de l'envoi : " + (data.error || "inconnue");
+            }
+          })
+          .catch(() => {
+            etat.textContent = "❌ Une erreur est survenue.";
+          });
         };
 
-        fetch("https://formulaire-3d-backend.onrender.com/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('etat').textContent = data.success
-            ? "✅ Email envoyé avec succès"
-            : "❌ Erreur EmailJS : " + (data.error || "inconnue");
-        })
-        .catch(err => {
-          document.getElementById('etat').textContent = "❌ Erreur JS : " + err.message;
-        });
+        reader.readAsDataURL(fichier);
       });
     });
   </script>
