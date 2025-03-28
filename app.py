@@ -1,14 +1,22 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/send-email": {"origins": "*"}})  # ✅ CORS OK pour Render + GitHub Pages
+CORS(app, resources={r"/send-email": {"origins": "*"}})  # CORS activé
 
-@app.route("/send-email", methods=["POST"])
+@app.route("/send-email", methods=["OPTIONS", "POST"])
 def send_email():
-    data = request.json
+    if request.method == "OPTIONS":
+        # Réponse au preflight CORS
+        response = make_response()
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        return response
 
+    # Traitement POST classique
+    data = request.json
     email = data.get("email")
     message = data.get("message")
     fichier3d = data.get("fichier3d")
@@ -30,9 +38,14 @@ def send_email():
     res = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
 
     if res.status_code == 200:
-        return jsonify({"success": True})
+        response = jsonify({"success": True})
     else:
-        return jsonify({"success": False, "error": res.text}), 400
+        response = jsonify({"success": False, "error": res.text})
+        response.status_code = 400
+
+    # Ajouter headers CORS à la réponse POST aussi
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 @app.route("/", methods=["GET"])
 def index():
