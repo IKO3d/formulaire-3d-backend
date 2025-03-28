@@ -13,37 +13,33 @@ def add_cors_headers(response):
 @app.route("/send-email", methods=["POST", "OPTIONS"])
 def send_email():
     if request.method == "OPTIONS":
-        return '', 204  # Répond immédiatement au préflight
+        return '', 204  # Répond au preflight
 
     data = request.json
-    email = data.get("email")
-    message = data.get("message")
-    fichier3d = data.get("fichier3d")
-    filename = data.get("filename")
 
     payload = {
         "service_id": "service_cub2bpl",
         "template_id": "template_4exwh14",
         "user_id": "27iodv7KMIYgP-rUM",
         "template_params": {
-            "email": email,
-            "message": message,
-            "filename": filename,
-            "fichier3d": fichier3d
+            "email": data.get("email"),
+            "message": data.get("message"),
+            "filename": data.get("filename"),
+            "fichier3d": data.get("fichier3d")
         }
     }
 
     headers = {"Content-Type": "application/json"}
-    res = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
+    r = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
 
-    if res.status_code == 200:
+    if r.status_code == 200:
         return jsonify({"success": True})
     else:
-        return jsonify({"success": False, "error": res.text}), 400
+        return jsonify({"success": False, "error": r.text}), 400
 
 @app.route("/", methods=["GET"])
 def index():
-    return "OK"
+    return "Backend OK"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
