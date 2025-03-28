@@ -3,7 +3,7 @@ from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app)  # Autorise les appels depuis GitHub Pages
+CORS(app, resources={r"/send-email": {"origins": "*"}})  # ✅ CORS OK pour Render + GitHub Pages
 
 @app.route("/send-email", methods=["POST"])
 def send_email():
