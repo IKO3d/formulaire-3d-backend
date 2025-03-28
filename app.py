@@ -1,21 +1,20 @@
 from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/send-email": {"origins": "*"}})  # CORS activé
 
-@app.route("/send-email", methods=["OPTIONS", "POST"])
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+@app.route("/send-email", methods=["POST", "OPTIONS"])
 def send_email():
     if request.method == "OPTIONS":
-        # Réponse au preflight CORS
-        response = make_response()
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        return response
+        return '', 204  # Répond immédiatement au préflight
 
-    # Traitement POST classique
     data = request.json
     email = data.get("email")
     message = data.get("message")
@@ -38,14 +37,9 @@ def send_email():
     res = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
 
     if res.status_code == 200:
-        response = jsonify({"success": True})
+        return jsonify({"success": True})
     else:
-        response = jsonify({"success": False, "error": res.text})
-        response.status_code = 400
-
-    # Ajouter headers CORS à la réponse POST aussi
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
+        return jsonify({"success": False, "error": res.text}), 400
 
 @app.route("/", methods=["GET"])
 def index():
