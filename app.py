@@ -30,7 +30,9 @@ def send_email():
     }
 
     headers = {"Content-Type": "application/json"}
-    r = requests.post("https://api.emailjs.com/api/v1.1/email/send", json=payload, headers=headers)
+    # Correct (v1.0 → supporté)
+r = requests.post("https://api.emailjs.com/api/v1.0/email/send", json=payload, headers=headers)
+
 
     if r.status_code == 200:
         return jsonify({"success": True})
